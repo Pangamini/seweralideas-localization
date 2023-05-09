@@ -1,0 +1,18 @@
+{
+    "name": "SeweralIdeas.Localization",
+    "rootNamespace": "SeweralIdeas.Localization",
+    "references": [
+        "GUID:cf5a3647f2623f044943c7d12af0b6c4",
+        "GUID:9335601f754a4914c9a91b13cdffc91e",
+        "GUID:9e3d4d2c9765add43adae7ab903158f7"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

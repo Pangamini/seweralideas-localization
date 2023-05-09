@@ -1,0 +1,22 @@
+{
+    "name": "SeweralIdeas.Localization.Editor",
+    "rootNamespace": "SeweralIdeas.Localization.Editor",
+    "references": [
+        "GUID:cf5a3647f2623f044943c7d12af0b6c4",
+        "GUID:9335601f754a4914c9a91b13cdffc91e",
+        "GUID:9e3d4d2c9765add43adae7ab903158f7",
+        "GUID:62f34880af45a3a4fac1153dd989bf3f",
+        "GUID:5351cf00130a51947b70be1b66be9753"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
