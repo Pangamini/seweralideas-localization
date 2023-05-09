@@ -1,0 +1,11 @@
+{
+  "name": "com.seweralideas.localization",
+  "version": "0.1.0",
+  "displayName": "Localization",
+  "description": "Localization for Unity",
+  "author": 
+  {
+    "name": "Boleslav Horak",
+    "email": "seweralideas@gmail.com"
+  }
+}
