@@ -17,10 +17,15 @@ namespace SeweralIdeas.Localization
         
         public ReadonlyDictView<string, string> Texts => new(m_texts);
         public LanguageHeader Header => m_header;
-
-        internal void SetText(string key, string newText)
+        
+        public void SetText(string key, string newText)
         {
             m_texts[key] = newText;
+        }
+
+        public void RemoveText(string key)
+        {
+            m_texts.Remove(key);
         }
 
         private IEnumerable<FileInfo> EnumerateTextFiles()
