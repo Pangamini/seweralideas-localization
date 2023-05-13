@@ -15,7 +15,7 @@ namespace SeweralIdeas.Localization
         private Sprite m_sprite;
         private Texture2D m_texture;
         
-        public string Name => m_name;
+        public string DisplayName => m_name;
         public string Author => m_author;
         public Texture2D Texture => m_texture;
         public Sprite Sprite => m_sprite;

@@ -21,11 +21,6 @@ namespace SeweralIdeas.Localization
         private LanguageHeader m_loadedLanguageHeader;
         private LanguageData m_loadedLanguageData;
         
-        /// <summary>
-        /// True when the loaded language was edited and should be saved to file
-        /// </summary>
-        private bool m_loadedLanguageDirty;
-
         public event Action<LanguageData> LanguageLoaded;
         
         public ReadonlyDictView<string, LanguageHeader> Headers => new(m_langHeaders);
@@ -89,9 +84,7 @@ namespace SeweralIdeas.Localization
         
         private void LoadLanguageVar(string langId)
         {
-            SaveChanges();
             m_loadedLanguageData = null;
-            m_loadedLanguageDirty = false;
             
             if(!string.IsNullOrWhiteSpace(m_loadedLanguageName) && m_langHeaders.TryGetValue(langId, out m_loadedLanguageHeader))
             {
@@ -115,7 +108,6 @@ namespace SeweralIdeas.Localization
 
         private void OnDisable()
         {
-            SaveChanges();
             SetSubscribedLanguage(null);
         }
 
@@ -124,23 +116,5 @@ namespace SeweralIdeas.Localization
             SetSubscribedLanguage(m_language);
         }
         
-        public void SetLoadedLanguageText(string key, string newText)
-        {
-            m_loadedLanguageDirty = true;
-            m_loadedLanguageData.SetText(key, newText);
-            Debug.Log($"Setting \"{key}\" to \"{newText}\"");
-        }
-        
-        private void SaveChanges()
-        {
-            if(!m_loadedLanguageDirty || m_loadedLanguageData == null)
-            {
-                return;
-            }
-
-            m_loadedLanguageData.Save();
-            m_loadedLanguageDirty = false;
-        }
-
     }
 }

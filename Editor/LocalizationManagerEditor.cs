@@ -35,7 +35,7 @@ namespace SeweralIdeas.Localization.Editor
                 string langName = pair.Key;
                 LanguageHeader header = pair.Value;
                 bool isOn = langName == loadedLangName;
-                bool toggle = GUILayout.Toggle(isOn, new GUIContent(header.Name, header.Texture), m_buttonStyle);
+                bool toggle = GUILayout.Toggle(isOn, new GUIContent(header.DisplayName, header.Texture), m_buttonStyle);
 
                 if(toggle && !isOn)
                 {
