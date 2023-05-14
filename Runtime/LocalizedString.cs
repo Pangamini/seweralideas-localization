@@ -18,7 +18,7 @@ namespace SeweralIdeas.Localization
                 {
                     return text;
                 }
-                return null;
+                return m_key;
             }
         }
     }
