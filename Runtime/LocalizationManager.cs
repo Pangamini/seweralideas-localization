@@ -102,8 +102,8 @@ namespace SeweralIdeas.Localization
         
         private void OnEnable()
         {
-            DetectLanguages();
             SetSubscribedLanguage(m_language);
+            DetectLanguages();
         }
 
         private void OnDisable()
