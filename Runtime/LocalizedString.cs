@@ -21,5 +21,6 @@ namespace SeweralIdeas.Localization
                 return m_key;
             }
         }
+        public string Key => m_key;
     }
 }
