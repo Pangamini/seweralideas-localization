@@ -14,18 +14,18 @@ namespace SeweralIdeas.Localization
         [SerializeField] private string m_streamingAssetsPath = "Languages/";
         [SerializeField] private string m_headerFilename = "header.json";
         
-        private StringConfigValue m_subscribedLanguageVar;
-        private readonly Dictionary<string, LanguageHeader> m_langHeaders = new();
-        
-        private string m_loadedLanguageName;
-        private LanguageHeader m_loadedLanguageHeader;
-        private LanguageData m_loadedLanguageData;
+        [NonSerialized] private StringConfigValue m_subscribedLanguageVar;
+        [NonSerialized] private readonly Dictionary<string, LanguageHeader> m_langHeaders = new();
+        [NonSerialized] private string m_loadedLanguageName;
+        [NonSerialized] private LanguageHeader m_loadedLanguageHeader;
+        [NonSerialized] private LanguageData m_loadedLanguageData;
+        [NonSerialized] private bool m_initialized;
         
         public event Action<LanguageData> LanguageLoaded;
         
         public ReadonlyDictView<string, LanguageHeader> Headers => new(m_langHeaders);
 
-        private void SetSubscribedLanguage(StringConfigValue variable)
+        private void SetSubscribedConfigValue(StringConfigValue variable)
         {
             if(m_subscribedLanguageVar == variable)
                 return;
@@ -98,22 +98,38 @@ namespace SeweralIdeas.Localization
         
         public string LoadedLanguageName => m_loadedLanguageName;
         public LanguageHeader LoadedLanguageHeader => m_loadedLanguageHeader;
-        public LanguageData LoadedLanguage => m_loadedLanguageData;
-        
+        public LanguageData LoadedLanguage
+        {
+            get
+            {
+                EnsureInitialized();
+                return m_loadedLanguageData;
+            }
+        }
+
         private void OnEnable()
         {
-            SetSubscribedLanguage(m_language);
+            EnsureInitialized();
+        }
+        
+        private void EnsureInitialized()
+        {
+            if(m_initialized)
+                return;
+            
+            SetSubscribedConfigValue(m_language);
             DetectLanguages();
+            m_initialized = true;
         }
 
         private void OnDisable()
         {
-            SetSubscribedLanguage(null);
+            SetSubscribedConfigValue(null);
         }
 
         private void OnValidate()
         {
-            SetSubscribedLanguage(m_language);
+            SetSubscribedConfigValue(m_language);
         }
         
     }
