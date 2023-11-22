@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using SeweralIdeas.Editor;
 using SeweralIdeas.Pooling;
 using UnityEditor;
@@ -12,16 +14,21 @@ namespace SeweralIdeas.Localization.Editor
         private readonly List<string> m_displayKeys = new();
         private static readonly GUILayoutOption[] s_expandWidth = { GUILayout.ExpandWidth(true) };
         private static readonly GUILayoutOption[] s_expandWidthHeight = { GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true) };
+        
         private static GUIStyle m_deleteKeyStyle;
+        private static GUIStyle s_searchFieldStyle;
         
         [SerializeField] private List<float> m_columnWidths = new();
         [SerializeField] private Vector2 m_tableScrollPos;
+        [SerializeField] private string m_searchText;
+        private readonly List<(string, LanguageData)> m_languages = new();
 
         protected void OnGUI()
         {
             if(m_deleteKeyStyle == null)
             {
                 m_deleteKeyStyle = "OL Minus";
+                s_searchFieldStyle = "ToolbarSearchTextField";
             }
 
             //using var vertScope = new EditorGUILayout.VerticalScope();
@@ -45,21 +52,16 @@ namespace SeweralIdeas.Localization.Editor
                 }
             }
 
+            // search bar
+            m_searchText = GUILayout.TextField(m_searchText, s_searchFieldStyle);
 
+            UpdateLanguates(manager);
             UpdateAllKeys(manager);
             UpdateDisplayedKeys();
 
-            using var _ = ListPool<(string, LanguageData)>.Get(out var languages);
-
-            foreach (var pair in manager.Headers)
-            {
-                if (LocalizationEditor.TryGetLanguage(pair.Key, out var language))
-                    languages.Add((pair.Key, language));
-            }
-
             void ValueDrawer(Rect position, int rowId, int columnId)
             {
-                (string languageName, LanguageData languageData) = languages[columnId];
+                (string languageName, LanguageData languageData) = m_languages[columnId];
                 string key = m_displayKeys[rowId];
 
                 if(!languageData.Texts.TryGetValue(key, out string oldValue))
@@ -74,7 +76,7 @@ namespace SeweralIdeas.Localization.Editor
 
             void ColumnDrawer(Rect position, int column)
             {
-                GUI.Button(position, languages[column].Item2.Header.DisplayName);
+                GUI.Button(position, m_languages[column].Item2.Header.DisplayName);
             }
 
             void RowDrawer(Rect position, int row)
@@ -94,9 +96,19 @@ namespace SeweralIdeas.Localization.Editor
             }
 
             var tableRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight, s_expandWidthHeight);
-            EditorGUITable.TableGUI(tableRect, ref m_tableScrollPos, m_columnWidths, m_displayKeys.Count, languages.Count, CornerDrawer, ValueDrawer, ColumnDrawer, RowDrawer);
+            EditorGUITable.TableGUI(tableRect, ref m_tableScrollPos, m_columnWidths, m_displayKeys.Count, m_languages.Count, CornerDrawer, ValueDrawer, ColumnDrawer, RowDrawer);
         }
-        
+
+        private void UpdateLanguates(LocalizationManager manager)
+        {
+            m_languages.Clear();
+            foreach (var pair in manager.Headers)
+            {
+                if (LocalizationEditor.TryGetLanguage(pair.Key, out var language))
+                    m_languages.Add((pair.Key, language));
+            }
+        }
+
         private void DeleteKey(string keyToDelete)
         {
             bool prompt = EditorUtility.DisplayDialog(
@@ -117,7 +129,30 @@ namespace SeweralIdeas.Localization.Editor
 
         private bool FilterKey(string key)
         {
-            return true;
+            static bool Filter(string key, string search)
+            {
+                int i = CultureInfo.InvariantCulture.CompareInfo.IndexOf(key, search, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace);
+                return i > (-1);
+            }
+
+            // skip if search text is empty
+            if (string.IsNullOrEmpty(m_searchText))
+                return true;
+
+            // check key
+            if(Filter(key, m_searchText))
+                return true;
+            
+            // check values
+            foreach ((string, LanguageData) pair in m_languages)
+            {
+                if(!pair.Item2.Texts.TryGetValue(key, out string value))
+                    continue;
+                
+                if(Filter(value, m_searchText))
+                    return true;
+            }
+            return false;
         }
         
         
