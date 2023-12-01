@@ -59,7 +59,7 @@ namespace SeweralIdeas.Localization.Editor
                     keyProp.serializedObject.ApplyModifiedProperties();
                 };
                 
-                AdvancedPopupWindow.ShowWindow(controlId, scrRect, 0, options, true, null, onKeySelected);
+                AdvancedPopupWindow.ShowWindow(controlId, scrRect, options, true, null, onKeySelected);
             }
 
             GUI.enabled = !localizationManager.LoadedLanguage.Texts.ContainsKey(keyProp.stringValue);
@@ -107,7 +107,7 @@ namespace SeweralIdeas.Localization.Editor
                 {
                     localizationManager.SetLanguage(langNames[index]);
                 };
-                AdvancedPopupWindow.ShowWindow(controlId, scrRect, 0, options, true, null, onLangSelected);
+                AdvancedPopupWindow.ShowWindow(controlId, scrRect, options, true, null, onLangSelected);
             }
             //EditorGUI.DrawTextureTransparent(iconRect, localizationManager.LoadedLanguage.Header.Texture, ScaleMode.ScaleToFit);
 
