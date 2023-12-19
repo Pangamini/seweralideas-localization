@@ -40,8 +40,10 @@ namespace SeweralIdeas.Localization.Editor
 
             EditorGUI.PropertyField(keyRect, keyProp, label);
 
+            GUI.enabled = localizationManager.LoadedLanguage != null;
             if(GUI.Button(popupRect, GUIContent.none, EditorStyles.popup))
             {
+                GUI.enabled = true;
                 var texts = localizationManager.LoadedLanguage.Texts;
                 var controlId = GUIUtility.GetControlID(FocusType.Passive, popupRect);
                 
@@ -62,7 +64,8 @@ namespace SeweralIdeas.Localization.Editor
                 AdvancedPopupWindow.ShowWindow(controlId, scrRect, options, true, null, onKeySelected);
             }
 
-            GUI.enabled = !localizationManager.LoadedLanguage.Texts.ContainsKey(keyProp.stringValue);
+            var language = localizationManager.LoadedLanguage;
+            GUI.enabled = language != null && !language.Texts.ContainsKey(keyProp.stringValue);
             if (GUI.Button(addRect, GUIContent.none, s_addKeyStyle))
             {
                 LocalizationEditor.SetLanguageText(localizationManager.LoadedLanguageName, keyProp.stringValue, string.Empty);

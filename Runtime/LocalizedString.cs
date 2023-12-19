@@ -13,8 +13,12 @@ namespace SeweralIdeas.Localization
             {
                 if(string.IsNullOrEmpty(m_key))
                     return null;
+
+                LanguageData language = LocalizationManager.GetInstance().LoadedLanguage;
+                if(language == null)
+                    return m_key;
                 
-                if(LocalizationManager.GetInstance().LoadedLanguage.Texts.TryGetValue(m_key, out string text))
+                if(language.Texts.TryGetValue(m_key, out string text))
                 {
                     return text;
                 }
