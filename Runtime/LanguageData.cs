@@ -14,8 +14,11 @@ namespace SeweralIdeas.Localization
         private LanguageHeader m_header;
         private const string DefaultTextFilename = "default.json";
         private readonly Dictionary<string, string> m_texts = new();
+        private readonly Dictionary<string, string> m_audioFiles = new();
         
         public ReadonlyDictView<string, string> Texts => new(m_texts);
+        public ReadonlyDictView<string, string> AudioFiles => new(m_audioFiles);
+        
         public LanguageHeader Header => m_header;
         
         public void SetText(string key, string newText)
@@ -26,6 +29,7 @@ namespace SeweralIdeas.Localization
         public void RemoveText(string key)
         {
             m_texts.Remove(key);
+            m_audioFiles.Remove(key);
         }
 
         private IEnumerable<FileInfo> EnumerateTextFiles()
@@ -50,6 +54,18 @@ namespace SeweralIdeas.Localization
                 ReadTextsFile(jsonFile, data.m_texts.Add);
             }
             
+            foreach (FileInfo file in new DirectoryInfo(header.Directory).EnumerateFiles())
+            {
+                if(file.Extension.Equals(".wav", StringComparison.OrdinalIgnoreCase))
+                {
+                    string key = Path.GetFileNameWithoutExtension(file.Name);
+                    if(!data.m_texts.ContainsKey(key))
+                        continue;
+                    data.m_audioFiles.Add(key, file.FullName);
+                }
+            }
+
+
             return data;
         }
 
