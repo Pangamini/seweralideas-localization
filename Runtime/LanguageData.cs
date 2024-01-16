@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 using SeweralIdeas.Collections;
+using SeweralIdeas.UnityUtils;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -54,9 +55,9 @@ namespace SeweralIdeas.Localization
                 ReadTextsFile(jsonFile, data.m_texts.Add);
             }
             
-            foreach (FileInfo file in new DirectoryInfo(header.Directory).EnumerateFiles())
+            foreach (FileInfo file in new DirectoryInfo(header.Directory).EnumerateFiles("*", SearchOption.AllDirectories))
             {
-                if(file.Extension.Equals(".wav", StringComparison.OrdinalIgnoreCase))
+                if(AudioManager.FileExtensions.Contains(file.Extension))
                 {
                     string key = Path.GetFileNameWithoutExtension(file.Name);
                     if(!data.m_texts.ContainsKey(key))
