@@ -4,6 +4,7 @@ using System.IO;
 using SeweralIdeas.Collections;
 using SeweralIdeas.Config;
 using SeweralIdeas.UnityUtils;
+using UnityEditor;
 using UnityEngine;
 namespace SeweralIdeas.Localization
 {
@@ -20,6 +21,15 @@ namespace SeweralIdeas.Localization
         [NonSerialized] private LanguageHeader m_loadedLanguageHeader;
         [NonSerialized] private LanguageData m_loadedLanguageData;
         [NonSerialized] private bool m_initialized;
+
+        
+        [InitializeOnEnterPlayMode]
+        private static void Reinit()
+        {
+            var inst = GetInstance();
+            if (!inst.EnsureInitialized())
+                inst.DetectLanguages();
+        }
         
         public event Action<LanguageData> LanguageLoaded;
         
@@ -112,14 +122,15 @@ namespace SeweralIdeas.Localization
             EnsureInitialized();
         }
         
-        private void EnsureInitialized()
+        private bool EnsureInitialized()
         {
             if(m_initialized)
-                return;
+                return false;
             
             SetSubscribedConfigValue(m_language);
             DetectLanguages();
             m_initialized = true;
+            return true;
         }
 
         private void OnDisable()

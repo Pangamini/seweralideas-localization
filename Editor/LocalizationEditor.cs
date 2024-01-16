@@ -7,9 +7,6 @@ namespace SeweralIdeas.Localization.Editor
 {
     public static class LocalizationEditor
     {
-        /// <summary>
-        /// True when the loaded language was edited and should be saved to file
-        /// </summary>
         private static readonly Dictionary<string, LanguageData> s_languages = new();
         private static readonly HashSet<string> s_dirtyLanguages = new();
 
