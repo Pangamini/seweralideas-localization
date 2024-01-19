@@ -6,6 +6,7 @@ using SeweralIdeas.Config;
 using SeweralIdeas.UnityUtils;
 using UnityEditor;
 using UnityEngine;
+
 namespace SeweralIdeas.Localization
 {
     [CreateAssetMenu(menuName = "AdventureEngine/"+nameof(LocalizationManager), fileName = nameof(LocalizationManager))]
@@ -23,7 +24,7 @@ namespace SeweralIdeas.Localization
         [NonSerialized] private bool m_initialized;
 
         
-        [InitializeOnEnterPlayMode]
+        [InitializeOnLoadMethod]
         private static void Reinit()
         {
             var inst = GetInstance();
