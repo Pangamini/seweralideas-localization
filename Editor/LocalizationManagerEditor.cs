@@ -24,7 +24,7 @@ namespace SeweralIdeas.Localization.Editor
             var manager = (LocalizationManager)target;
             if(GUILayout.Button("Detect Languages"))
             {
-                manager.DetectLanguages();
+                manager.DetectLanguagesAsync();
             }
 
             GUILayout.Space(EditorGUIUtility.singleLineHeight);

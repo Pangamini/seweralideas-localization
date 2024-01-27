@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ namespace SeweralIdeas.Localization.Editor
 {
     public static class LocalizationEditor
     {
-        private static readonly Dictionary<string, LanguageData> s_languages = new();
+        private static readonly Dictionary<string, Task<LanguageData>> s_languages = new();
         private static readonly HashSet<string> s_dirtyLanguages = new();
 
         public static void DiscardAllChanges()
@@ -15,13 +16,20 @@ namespace SeweralIdeas.Localization.Editor
             s_languages.Clear();
             s_dirtyLanguages.Clear();
         }
-        
+
         public static void SetLanguageText(string languageName, string key, string newText)
         {
-            if(!TryGetLanguage(languageName, out var languageData))
+            var task = SetLanguageTextAsync(languageName, key, newText);
+            s_languages[languageName] = task;
+        }
+        
+        public async static Task<LanguageData> SetLanguageTextAsync(string languageName, string key, string newText)
+        {
+            var languageData = await TryGetLanguage(languageName);
+            if(languageData == null)
             {
                 Debug.LogError($"Couldn't load language \"{languageName}\"");
-                return;
+                return null;
             }
             
             s_dirtyLanguages.Add(languageName);
@@ -32,15 +40,23 @@ namespace SeweralIdeas.Localization.Editor
             {
                 manager.LoadedLanguage.SetText(key, newText);
             }
-            SaveChanges();
+            await SaveChangesAsync();
+            return languageData;
         }
-        
+
         public static void DeleteLanguageText(string languageName, string key)
         {
-            if(!TryGetLanguage(languageName, out var languageData))
+            var task = DeleteLanguageTextAsync(languageName, key);
+            s_languages[languageName] = task;
+        }
+        
+        public async static Task<LanguageData> DeleteLanguageTextAsync(string languageName, string key)
+        {
+            var languageData = await TryGetLanguage(languageName);
+            if(languageData == null)
             {
                 Debug.LogError($"Couldn't load language \"{languageName}\"");
-                return;
+                return null;
             }
             
             s_dirtyLanguages.Add(languageName);
@@ -51,32 +67,28 @@ namespace SeweralIdeas.Localization.Editor
             {
                 manager.LoadedLanguage.RemoveText(key);
             }
-            SaveChanges();
+            await SaveChangesAsync();
+            return languageData;
         }
 
-        public static bool TryGetLanguage(string languageName, out LanguageData languageData)
+        
+        public static Task<LanguageData> TryGetLanguage(string languageName)
         {
-            if(!s_languages.TryGetValue(languageName, out languageData))
+            if(s_languages.TryGetValue(languageName, out var languageData))
+                return languageData;
+            
+            if(!LocalizationManager.GetInstance().Headers.TryGetValue(languageName, out var header))
             {
-                if(!LocalizationManager.GetInstance().Headers.TryGetValue(languageName, out var header))
-                {
-                    return false;
-                }
-                
-                languageData = LanguageData.Load(header);
-                if(languageData == null)
-                {
-                    return false;
-                }
-                
-                s_languages.Add(languageName, languageData);
-                return true;
+                return null;
             }
+                
+            languageData = LanguageData.Load(header);
+            s_languages.Add(languageName, languageData);
+            return languageData;
 
-            return true;
         }
         
-        public static void SaveChanges()
+        public async static Task SaveChangesAsync()
         {
             foreach (var dirtyLang in s_dirtyLanguages)
             {
@@ -84,7 +96,7 @@ namespace SeweralIdeas.Localization.Editor
                     continue;
                 
                 Debug.Log($"Saving language \"{dirtyLang}\"");
-                languageData.Save();
+                await (await languageData).Save();
             }
             
             s_dirtyLanguages.Clear();
