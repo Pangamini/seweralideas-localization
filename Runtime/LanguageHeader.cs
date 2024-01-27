@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
+
 namespace SeweralIdeas.Localization
 {
     [Serializable]
@@ -9,14 +12,13 @@ namespace SeweralIdeas.Localization
         [SerializeField] private string m_name;
         [SerializeField] private string m_author;
         [SerializeField] private string m_icon;
+        [SerializeField] private List<string> m_dataFiles = new();
 
         private string m_directory;
         private string m_headerFile;
         private Sprite m_sprite;
         private Texture2D m_texture;
 
-        public string DisplayName => m_name;
-        public string Author => m_author;
         public Texture2D Texture
         {
             get
@@ -25,7 +27,7 @@ namespace SeweralIdeas.Localization
                 {
                     string dirPath = Path.GetDirectoryName(m_headerFile);
                     string iconPath = Path.Combine(dirPath, m_icon);
-                    
+
                     if(File.Exists(iconPath))
                     {
                         byte[] data = File.ReadAllBytes(iconPath);
@@ -43,14 +45,27 @@ namespace SeweralIdeas.Localization
         public string Directory => m_directory;
         public string HeaderFile => m_headerFile;
 
-        public static LanguageHeader Load(string headerFileFullName)
+        public string DisplayName => m_name;
+        public string Author => m_author;
+        public List<string> DataFiles => m_dataFiles;
+
+        public async static Task<LanguageHeader> Load(string headerFileFullName)
         {
-            var header = JsonUtility.FromJson<LanguageHeader>(File.ReadAllText(headerFileFullName));
+            string json = await LocalizationManager.LoadTextFile(headerFileFullName);
+            LanguageHeader header = JsonUtility.FromJson<LanguageHeader>(json);
 
             header.m_headerFile = headerFileFullName;
-            header.m_directory = Path.GetDirectoryName(headerFileFullName);
+            header.m_directory = headerFileFullName.Substring(0, headerFileFullName.Length - Path.GetFileName(headerFileFullName).Length);
 
             return header;
+        }
+
+        public IEnumerable<string> EnumerateDataURLs()
+        {
+            foreach (var file in m_dataFiles)
+            {
+                yield return Path.Combine(m_directory, file);
+            }
         }
     }
 }

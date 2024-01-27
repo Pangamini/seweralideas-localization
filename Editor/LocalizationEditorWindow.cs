@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using SeweralIdeas.Editor;
 using SeweralIdeas.Pooling;
 using UnityEditor;
@@ -22,7 +23,9 @@ namespace SeweralIdeas.Localization.Editor
         [SerializeField] private Vector2 m_tableScrollPos;
         [SerializeField] private string m_searchText;
         private readonly List<(string, LanguageData)> m_languages = new();
-
+        private Task m_reloadTask;
+        private Task m_updateTask;
+        
         protected void OnGUI()
         {
             if(m_deleteKeyStyle == null)
@@ -38,25 +41,48 @@ namespace SeweralIdeas.Localization.Editor
             if(manager == null)
                 return;
 
+            if(m_reloadTask != null && m_reloadTask.IsCompleted)
+            {
+                Task task = m_reloadTask;
+                m_reloadTask = null;
+                task.Wait();
+            }
+
+            GUI.enabled = m_reloadTask == null;
             using (new GUILayout.HorizontalScope())
             {
                 if(GUILayout.Button("Detect Languages"))
                 {
-                    manager.DetectLanguages();
+                    if(m_reloadTask == null)
+                        m_reloadTask = manager.DetectLanguagesAsync();
                 }
                 
                 if(GUILayout.Button("Reload"))
                 {
-                    LocalizationEditor.DiscardAllChanges();
-                    manager.DetectLanguages();
+                    if(m_reloadTask == null)
+                    {
+                        LocalizationEditor.DiscardAllChanges();
+                        m_reloadTask = manager.DetectLanguagesAsync();
+                    }
                 }
             }
+            GUI.enabled = true;
 
             // search bar
             m_searchText = GUILayout.TextField(m_searchText, s_searchFieldStyle);
 
-            UpdateLanguates(manager);
-            UpdateAllKeys(manager);
+            if(m_reloadTask == null && m_updateTask == null)
+            {
+                m_updateTask = UpdateLanguages(manager).ContinueWith((_)=>UpdateAllKeys(manager));
+            }
+            if(m_updateTask != null && m_updateTask.IsCompleted)
+            {
+                var task = m_updateTask;
+                m_updateTask = null;
+                task.Wait();
+            }
+            
+
             UpdateDisplayedKeys();
 
             void ValueDrawer(Rect position, int rowId, int columnId)
@@ -99,12 +125,13 @@ namespace SeweralIdeas.Localization.Editor
             EditorGUITable.TableGUI(tableRect, ref m_tableScrollPos, m_columnWidths, m_displayKeys.Count, m_languages.Count, CornerDrawer, ValueDrawer, ColumnDrawer, RowDrawer);
         }
 
-        private void UpdateLanguates(LocalizationManager manager)
+        private async Task UpdateLanguages(LocalizationManager manager)
         {
             m_languages.Clear();
             foreach (var pair in manager.Headers)
             {
-                if (LocalizationEditor.TryGetLanguage(pair.Key, out var language))
+                var language = await LocalizationEditor.TryGetLanguage(pair.Key);
+                if (language != null)
                     m_languages.Add((pair.Key, language));
             }
         }
@@ -175,7 +202,12 @@ namespace SeweralIdeas.Localization.Editor
             m_allKeys.Clear();
             foreach (KeyValuePair<string, LanguageHeader> languagePair in manager.Headers)
             {
-                if(!LocalizationEditor.TryGetLanguage(languagePair.Key, out LanguageData languageData))
+                Task<LanguageData> task = LocalizationEditor.TryGetLanguage(languagePair.Key);
+                if(!task.IsCompletedSuccessfully)
+                    return;
+
+                var languageData = task.Result;
+                if(languageData == null)
                     continue;
 
                 foreach (var keyTextPair in languageData.Texts)
