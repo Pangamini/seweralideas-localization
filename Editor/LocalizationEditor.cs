@@ -82,7 +82,7 @@ namespace SeweralIdeas.Localization.Editor
                 return null;
             }
                 
-            languageData = LanguageData.Load(header);
+            languageData = LanguageData.LoadAsync(header);
             s_languages.Add(languageName, languageData);
             return languageData;
 
