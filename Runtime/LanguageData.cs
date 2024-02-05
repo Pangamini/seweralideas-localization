@@ -43,7 +43,7 @@ namespace SeweralIdeas.Localization
             m_texts.Remove(key);
         }
 
-        public async static Task<LanguageData> Load(LanguageHeader header)
+        public async static Task<LanguageData> LoadAsync(LanguageHeader header)
         {
             var data = new LanguageData();
             data.m_header = header;

@@ -1,3 +1,6 @@
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,7 +31,10 @@ namespace SeweralIdeas.Localization
 
         private Task m_detectingLanguagesTask = null;
         
-        [RuntimeInitializeOnLoadMethod]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        #if UNITY_EDITOR
+        [InitializeOnLoadMethod]
+        #endif
         private async static void Reinit()
         {
             var inst = GetInstance();
@@ -60,8 +66,6 @@ namespace SeweralIdeas.Localization
         
         public async Task DetectLanguagesAsync()
         {
-            m_detectingLanguagesTask = null;    //TODO REMOVE
-            
             if(m_detectingLanguagesTask == null)
             {
                 m_detectingLanguagesTask = DetectLanguagesInternalAsync();
@@ -183,9 +187,9 @@ namespace SeweralIdeas.Localization
         {
             m_loadedLanguageData = null;
             
-            if(!string.IsNullOrWhiteSpace(m_loadedLanguageName) && m_langHeaders.TryGetValue(langId, out m_loadedLanguageHeader))
+            if(!string.IsNullOrWhiteSpace(langId) && m_langHeaders.TryGetValue(langId, out m_loadedLanguageHeader))
             {
-                m_loadedLanguageData = await LanguageData.Load(m_loadedLanguageHeader);
+                m_loadedLanguageData = await LanguageData.LoadAsync(m_loadedLanguageHeader);
             }
 
             m_loadedLanguageName = langId;
