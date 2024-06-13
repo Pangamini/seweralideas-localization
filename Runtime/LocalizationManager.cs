@@ -17,12 +17,12 @@ namespace SeweralIdeas.Localization
     [CreateAssetMenu(menuName = "AdventureEngine/"+nameof(LocalizationManager), fileName = nameof(LocalizationManager))]
     public class LocalizationManager : SingletonAsset<LocalizationManager>
     {
-        [SerializeField] private StringConfigValue m_language;
+        [SerializeField] private StringConfigField m_language;
         [SerializeField] private string m_streamingAssetsPath = "Languages/";
         [SerializeField] private string m_headerFilename = "header.json";
         [SerializeField] private string m_webGLHeader = "languages.txt";
         
-        [NonSerialized] private StringConfigValue m_subscribedLanguageVar;
+        [NonSerialized] private StringConfigField m_subscribedLanguageVar;
         [NonSerialized] private readonly Dictionary<string, LanguageHeader> m_langHeaders = new();
         [NonSerialized] private string m_loadedLanguageName;
         [NonSerialized] private LanguageHeader m_loadedLanguageHeader;
@@ -46,19 +46,19 @@ namespace SeweralIdeas.Localization
         
         public ReadonlyDictView<string, LanguageHeader> Headers => new(m_langHeaders);
 
-        private void SetSubscribedConfigValue(StringConfigValue variable)
+        private void SetSubscribedConfigValue(StringConfigField variable)
         {
             if(m_subscribedLanguageVar == variable)
                 return;
             
             if(m_subscribedLanguageVar != null)
             {
-                m_subscribedLanguageVar.onValueChanged -= LoadLanguageAsync;
+                m_subscribedLanguageVar.ValueChanged -= LoadLanguageAsync;
             }
             m_subscribedLanguageVar = variable;
             if(m_subscribedLanguageVar != null)
             {
-                m_subscribedLanguageVar.onValueChanged += LoadLanguageAsync;
+                m_subscribedLanguageVar.ValueChanged += LoadLanguageAsync;
                 LoadLanguageAsync(m_subscribedLanguageVar.Value);
             }
         }
