@@ -1,3 +1,0 @@
-namespace SeweralIdeas.Localization.Editor
-{
-}

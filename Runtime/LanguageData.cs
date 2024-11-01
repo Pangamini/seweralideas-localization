@@ -38,10 +38,7 @@ namespace SeweralIdeas.Localization
             m_texts[key] = newText;
         }
 
-        public void RemoveText(string key)
-        {
-            m_texts.Remove(key);
-        }
+        public bool RemoveText(string key, out string removedValue) => m_texts.Remove(key, out removedValue);
 
         public async static Task<LanguageData> LoadAsync(LanguageHeader header)
         {
@@ -131,17 +128,6 @@ namespace SeweralIdeas.Localization
                     {
                         continue;
                     }
-
-                    // prepare writer
-                    // string tempFilePath = GetTempFile(jsonFile);
-                    // using var fileStream = File.Open(tempFilePath, FileMode.Create, FileAccess.Write);
-                    // using var streamWriter = new StreamWriter(fileStream);
-                    // using var writer = new JsonTextWriter(streamWriter);
-                    // writer.Formatting = Formatting.Indented;
-                    //
-                    // writer.WriteToken(JsonToken.StartObject);
-                    
-                    // visit all keys in the original file, write only those, in order
 
                     using (HashSetPool<string>.Get(out var textKeys))
                     using (HashSetPool<string>.Get(out var audioKeys))
@@ -240,6 +226,8 @@ namespace SeweralIdeas.Localization
         private async static Task ReadDataUrl(string jsonFile, Action<string, string> keyTextVisitor, Action<string, string> keyAudioVisitor)
         {
             string text = await LocalizationUtils.LoadTextFile(jsonFile);
+            if(string.IsNullOrWhiteSpace(text))
+                return;
             
             using var streamReader = new StringReader(text);
             using var reader = new JsonTextReader(streamReader);

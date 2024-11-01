@@ -122,7 +122,8 @@ namespace SeweralIdeas.Localization.Editor
             using (ListPool<LocalizedString>.Get(out var localizedStrings))
             {
                 EditorReflectionUtility.GetVariable(property.propertyPath, property.serializedObject.targetObjects, localizedStrings);
-                loadedLanguage.Texts.TryGetValue(localizedStrings[0].Key, out var oldText);
+                string key = localizedStrings[0].Key;
+                loadedLanguage.Texts.TryGetValue(key, out var oldText);
                 
                 GUI.enabled = EditorLanguageLoader.LoadedLanguage.Value.Texts.ContainsKey(keyProp.stringValue);
                 string newText = EditorGUI.DelayedTextField(valueRect, oldText);
@@ -130,7 +131,8 @@ namespace SeweralIdeas.Localization.Editor
                 // apply changes to the language, if change
                 if(oldText != newText && GUI.enabled)
                 {
-                    throw new NotImplementedException();
+                    loadedLanguage.SetText(key, newText);
+                    loadedLanguage.Save();
                     // LocalizationEditor.SetLanguageText(editorLangSettings.Manager.LoadedLanguageName, keyProp.stringValue, newText);
                 }
                 GUI.enabled = true;

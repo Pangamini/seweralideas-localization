@@ -22,7 +22,6 @@ namespace SeweralIdeas.Localization
         protected void OnDisable()
         {
             GlobalLanguage.Language.Changed -= OnLanguageLoaded;
-
             ClearOldRequest();
         }
         
@@ -41,11 +40,16 @@ namespace SeweralIdeas.Localization
             }
         }
 
-        private void OnLanguageLoaded(LanguageData languageData)
+        private void OnLanguageLoaded(LanguageData languageData) => UpdateAudio();
+        
+        
+        void UpdateAudio()
         {
             ClearOldRequest();
-            
-            if(!languageData.TryGetAudioUrl(m_key, out string audioFile))
+
+            LanguageData languageData = GlobalLanguage.Language.Value;
+                
+            if(languageData == null || !languageData.TryGetAudioUrl(m_key, out string audioFile))
             {
                 m_updateEvent.Invoke(null);
                 return;
