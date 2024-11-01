@@ -22,72 +22,86 @@ namespace SeweralIdeas.Localization.Editor
         private static GUIStyle s_searchFieldStyle;
         private static GUIStyle s_whiteBgStyle;
         private static GUIStyle s_rowButtonStyle;
-
         
         private static readonly Color SelectedColor = new Color(1,1,1,1);
         private static readonly Color HoveredColor  = new Color(1,1,1,0.5f);
         
-        private LanguageData[] m_loadedLanguages = Array.Empty<LanguageData>();
+        private readonly List<EditorLanguageManager.Request> m_requests = new();
+        private          bool                                m_allKeysDirty;
 
-        [SerializeField] private LocalizationManager   m_manager;
         [SerializeField] private string                m_searchText;
         [SerializeField] private Vector2               m_tableScrollPos;
         [SerializeField] private List<float>           m_columnWidths = new();
         [SerializeField] private string                m_selectedKey;
+        
         private                  string                m_editedKey;
-        [NonSerialized]  private LocalizationManager   m_registeredManager;
         private readonly         HashSet<LanguageData> m_dirtyLanguages = new();
         private                  ValueTask             m_savingTask;
 
-        private LocalizationManager RegisteredManager
+        protected void OnEnable() => EditorLanguageManager.ActiveManager.Changed += OnActiveManagerChanged;
+        
+        protected void OnDisable()
         {
-            get => m_registeredManager;
-            set
-            {
-                if(m_registeredManager == value)
-                    return;
-
-                if(m_registeredManager != null)
-                    m_registeredManager.Headers.Changed -= OnManagerHeadersChanged;
-
-                m_registeredManager = value;
-
-                if(m_registeredManager != null)
-                    m_registeredManager.Headers.Changed += OnManagerHeadersChanged;
-                else
-                    OnManagerHeadersChanged(default);
-            }
+            ClearAllRequests();
+            EditorLanguageManager.ActiveManager.Changed -= OnActiveManagerChanged;
         }
 
-        private async void OnManagerHeadersChanged(ReadonlyDictView<string, LanguageHeader> dict)
+        private void OnActiveManagerChanged(LanguageManager languageManager, LanguageManager oldLanguageManager)
         {
-            m_dirtyLanguages.Clear();
-            m_loadedLanguages = await LoadAllLanguages(dict);
-            UpdateAllKeys();
+            if(oldLanguageManager != null)
+                oldLanguageManager.Headers.Changed -= OnLanguageSetChanged;
+            
+            if(languageManager != null)
+                languageManager.Headers.Changed += OnLanguageSetChanged;
         }
 
-        private async Task<LanguageData[]> LoadAllLanguages(ReadonlyDictView<string, LanguageHeader> dict)
+        private void OnLanguageSetChanged(ReadonlyDictView<string, LanguageHeader> languageHeaders, ReadonlyDictView<string, LanguageHeader> oldHeaders)
         {
-            var tasks = new Task<LanguageData>[dict.Count];
-            var languages = new LanguageData[dict.Count];
+            ClearAllRequests();
 
-            int i = 0;
-            foreach (KeyValuePair<string, LanguageHeader> pair in dict)
+            foreach (KeyValuePair<string, LanguageHeader> keyValuePair in languageHeaders)
             {
-                tasks[i++] = LanguageData.LoadAsync(pair.Value);
+                var request = EditorLanguageManager.CreateRequest(keyValuePair.Key);
+                m_requests.Add(request);
+                request.Language.Changed += OnRequestLanguageChanged;
+            }
+        }
+        
+        private void ClearAllRequests()
+        {
+            foreach (var oldReq in m_requests)
+            {
+                oldReq.Language.Changed -= OnRequestLanguageChanged;
+                oldReq.Dispose();
             }
 
-            for( int index = 0; index < tasks.Length; index++ )
-            {
-                Task<LanguageData> task = tasks[index];
-                languages[index] = await task;
-            }
+            m_requests.Clear();
+        }
+        
+        private void OnRequestLanguageChanged(LanguageData newLang, LanguageData oldLang)
+        {
+            if(oldLang != null)
+                oldLang.Modified -= OnLangModified;
+            if(newLang != null)
+                newLang.Modified += OnLangModified;
+            m_allKeysDirty = true;
+            Repaint();
+        }
 
-            return languages;
+        private void OnLangModified()
+        {
+            Repaint();
+            m_allKeysDirty = true;
         }
 
         protected void OnGUI()
         {
+            if(m_allKeysDirty)
+            {
+                m_allKeysDirty = false;
+                UpdateAllKeys();
+            }
+            
             wantsMouseMove = true;
             s_whiteBgStyle ??= "WhiteBackground";
             s_deleteKeyStyle ??= "OL Minus";
@@ -98,17 +112,17 @@ namespace SeweralIdeas.Localization.Editor
                 s_rowButtonStyle = new GUIStyle("Button");
                 s_rowButtonStyle.alignment = TextAnchor.MiddleLeft;
             }
-
-            //using var vertScope = new EditorGUILayout.VerticalScope();
-            m_manager = (LocalizationManager)EditorGUILayout.ObjectField("Manager", m_manager, typeof( LocalizationManager ), false);
-            RegisteredManager = m_manager;
-
+            
             m_searchText = GUILayout.TextField(m_searchText, s_searchFieldStyle);
             UpdateDisplayedKeys();
 
             void ValueDrawer(Rect position, int rowId, int columnId)
             {
-                LanguageData languageData = m_loadedLanguages[columnId];
+                LanguageData languageData = m_requests[columnId].Language.Value;
+
+                if(languageData == null)
+                    return;
+                
                 string key = m_displayKeys[rowId];
 
                 languageData.Texts.TryGetValue(key, out string oldValue);
@@ -123,7 +137,10 @@ namespace SeweralIdeas.Localization.Editor
 
             void ColumnDrawer(Rect position, int column)
             {
-                GUI.Button(position, m_loadedLanguages[column].Header.DisplayName);
+                var language = m_requests[column].Language.Value;
+                if(language == null)
+                    return;
+                GUI.Button(position, language.Header.DisplayName);
             }
 
             void RowDrawer(Rect position, int row)
@@ -163,7 +180,7 @@ namespace SeweralIdeas.Localization.Editor
             static void CornerDrawer(Rect pos) => GUI.Button(pos, "");
 
             var tableRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight, ExpandWidthHeight);
-            EditorGUITable.TableGUI(tableRect, ref m_tableScrollPos, m_columnWidths, m_displayKeys.Count, m_loadedLanguages.Length, CornerDrawer, ValueDrawer, ColumnDrawer, RowDrawer);
+            EditorGUITable.TableGUI(tableRect, ref m_tableScrollPos, m_columnWidths, m_displayKeys.Count, m_requests.Count, CornerDrawer, ValueDrawer, ColumnDrawer, RowDrawer);
 
             if(m_savingTask.IsCompleted)
                 m_savingTask = SaveAllDirtyLanguagesAsync();
@@ -192,9 +209,12 @@ namespace SeweralIdeas.Localization.Editor
         private void UpdateAllKeys()
         {
             m_allKeys.Clear();
-            foreach (var language in m_loadedLanguages)
+            foreach (var request in m_requests)
             {
-                foreach (var keyTextPair in language.Texts)
+                if(request.Language.Value == null)
+                    continue;
+                
+                foreach (var keyTextPair in request.Language.Value.Texts)
                     m_allKeys.Add(keyTextPair.Key);
             }
         }
@@ -230,9 +250,9 @@ namespace SeweralIdeas.Localization.Editor
                 return true;
 
             // check values
-            foreach (var language in m_loadedLanguages)
+            foreach (var request in m_requests)
             {
-                if(!language.Texts.TryGetValue(key, out string value))
+                if(!request.Language.Value.Texts.TryGetValue(key, out string value))
                     continue;
 
                 if(Filter(value, m_searchText))
@@ -252,38 +272,35 @@ namespace SeweralIdeas.Localization.Editor
             if(!prompt)
                 return;
 
-            foreach (var languageData in m_loadedLanguages)
+            foreach (var request in m_requests)
             {
+                var languageData = request.Language.Value;
+                
                 if (languageData.RemoveText(keyToDelete, out _))
                     m_dirtyLanguages.Add(languageData);
-                
-                m_allKeys.Remove(keyToDelete);
-                // throw new NotImplementedException();
-                // LocalizationEditor.DeleteLanguageText(pair.Key, keyToDelete);
             }
         }
         
         private void RenameKey(string editedKey, string newKey)
         {
-            foreach (var language in m_loadedLanguages)
+            foreach (var request in m_requests)
             {
-                if(language.Texts.ContainsKey(newKey))
+                if(request.Language.Value.Texts.ContainsKey(newKey))
                 {
                     Debug.LogError("Failed to rename: New key already present.");
                     return;
                 }
             }
 
-            foreach (var language in m_loadedLanguages)
+            foreach (var request in m_requests)
             {
-                if(language.RemoveText(editedKey, out var removedValue))
+                var languageData = request.Language.Value;
+                if(languageData.RemoveText(editedKey, out var removedValue))
                 {
-                    language.SetText(newKey, removedValue);
-                    m_dirtyLanguages.Add(language);
+                    languageData.SetText(newKey, removedValue);
+                    m_dirtyLanguages.Add(languageData);
                 }
             }
-            m_allKeys.Remove(editedKey);
-            m_allKeys.Add(newKey);
         }
 
 

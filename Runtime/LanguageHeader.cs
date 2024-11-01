@@ -51,7 +51,7 @@ namespace SeweralIdeas.Localization
 
         public async static Task<LanguageHeader> Load(string headerFileFullName)
         {
-            string json = await LocalizationUtils.LoadTextFile(headerFileFullName);
+            string json = await LocalizationUtils.LoadTextFileAsync(headerFileFullName);
             LanguageHeader header = JsonUtility.FromJson<LanguageHeader>(json);
 
             header.m_headerFile = headerFileFullName;

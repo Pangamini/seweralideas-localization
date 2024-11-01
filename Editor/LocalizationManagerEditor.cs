@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 namespace SeweralIdeas.Localization.Editor
 {
-    [CustomEditor(typeof(LocalizationManager))]
+    [CustomEditor(typeof(LanguageManager))]
     public class LocalizationManagerEditor : UnityEditor.Editor
     {
         private GUIStyle m_buttonStyle;
@@ -20,7 +20,7 @@ namespace SeweralIdeas.Localization.Editor
             }
             
             
-            var manager = (LocalizationManager)target;
+            var manager = (LanguageManager)target;
             if(GUILayout.Button("Detect Languages"))
             {
                 manager.Reload();
@@ -31,7 +31,7 @@ namespace SeweralIdeas.Localization.Editor
         }
         
         
-        private void LanguageHeadersGui(LocalizationManager manager)
+        private void LanguageHeadersGui(LanguageManager manager)
         {
             // string loadedLangName = manager.LoadedLanguageName;
 
@@ -47,11 +47,8 @@ namespace SeweralIdeas.Localization.Editor
                 if(toggle && !isOn)
                 {
                     // clicked
-                    EditorLanguageLoader.LoadParams = new LanguageLoader.Params
-                    {
-                        Manager = manager,
-                        LanguageName = langName
-                    };
+                    EditorLanguageManager.ActiveManager.Value = manager;
+                    EditorLanguageManager.ActiveLanguageName = langName;
                     RepaintInspector();
                 }
             }

@@ -29,7 +29,7 @@ namespace SeweralIdeas.Localization.Editor
                 s_addKeyStyle = "OL Plus";
             }
 
-            var language = EditorLanguageLoader.LoadedLanguage.Value;
+            var language = EditorLanguageManager.ActiveLanguage.Value;
             
             var keyProp = property.FindPropertyRelative("m_key");
             Rect keyRect = new Rect(position.x, position.y, position.width - KeyPopupWidth - KeyAddWidth, EditorGUIUtility.singleLineHeight);
@@ -66,8 +66,10 @@ namespace SeweralIdeas.Localization.Editor
             GUI.enabled = language != null && !language.Texts.ContainsKey(keyProp.stringValue);
             if (GUI.Button(addRect, GUIContent.none, s_addKeyStyle))
             {
-                throw new NotImplementedException();
-                // LocalizationEditor.SetLanguageText(localizationManager.LoadedLanguageName, keyProp.stringValue, string.Empty);
+                LanguageData loadedLanguage = EditorLanguageManager.ActiveLanguage.Value;
+                
+                loadedLanguage.SetText(keyProp.stringValue, string.Empty);
+                loadedLanguage.Save();
             }
             GUI.enabled = true;
             
@@ -78,7 +80,7 @@ namespace SeweralIdeas.Localization.Editor
         
         private static void LocalizedValueGUI(Rect position, SerializedProperty property, Rect popupRect, SerializedProperty keyProp)
         {
-            LanguageData loadedLanguage = EditorLanguageLoader.LoadedLanguage.Value;
+            LanguageData loadedLanguage = EditorLanguageManager.ActiveLanguage.Value;
 
             const float imageWidth = 32;
 
@@ -99,20 +101,13 @@ namespace SeweralIdeas.Localization.Editor
                 List<GUIContent> options = new();
                 List<string> langNames = new();
                 
-                foreach (var pair in EditorLanguageLoader.LoadParams.Manager.Headers.Value)
+                foreach (var pair in EditorLanguageManager.ActiveManager.Value.Headers.Value)
                 {
                     langNames.Add(pair.Key);
                     options.Add(new GUIContent(pair.Value.DisplayName, pair.Value.Texture));
                 }
 
-                Action<int> onLangSelected = (index) =>
-                {
-                    EditorLanguageLoader.LoadParams = new LanguageLoader.Params
-                    {
-                        Manager = EditorLanguageLoader.LoadParams.Manager,
-                        LanguageName = langNames[index]
-                    };
-                };
+                Action<int> onLangSelected = (index) => EditorLanguageManager.ActiveLanguageName = langNames[index];
                 
                 AdvancedDropdownWindow.ShowWindow(controlId, scrRect, options, true, null, onLangSelected);
             }
@@ -125,7 +120,7 @@ namespace SeweralIdeas.Localization.Editor
                 string key = localizedStrings[0].Key;
                 loadedLanguage.Texts.TryGetValue(key, out var oldText);
                 
-                GUI.enabled = EditorLanguageLoader.LoadedLanguage.Value.Texts.ContainsKey(keyProp.stringValue);
+                GUI.enabled = EditorLanguageManager.ActiveLanguage.Value.Texts.ContainsKey(keyProp.stringValue);
                 string newText = EditorGUI.DelayedTextField(valueRect, oldText);
                 
                 // apply changes to the language, if change

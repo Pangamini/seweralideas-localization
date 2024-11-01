@@ -18,8 +18,8 @@ namespace SeweralIdeas.Localization
         [Serializable]
         public struct Params
         {
-            [SerializeField] public LocalizationManager Manager;
-            [SerializeField] public string              LanguageName;
+            [SerializeField] public LanguageManager Manager;
+            [SerializeField] public string          LanguageName;
         }
         
         public Params LoadParams
@@ -39,18 +39,13 @@ namespace SeweralIdeas.Localization
                 if(m_params.Manager != null)
                     m_params.Manager.Headers.Changed += OnHeadersChanged;
                 else
-                    OnHeadersChanged(default);
+                    OnHeadersChanged(default, default);
             }
         }
         
-        private async void OnHeadersChanged(ReadonlyDictView<string, LanguageHeader> target)
+        private async void OnHeadersChanged(ReadonlyDictView<string, LanguageHeader> target, ReadonlyDictView<string, LanguageHeader> _)
         {
-
-            if(m_currentTask != null)
-            {
-                m_currentTask.Dispose();
-                m_currentTask = null;
-            }
+            m_currentTask = null;
 
             if(!target.TryGetValue(LoadParams.LanguageName, out LanguageHeader languageHeader))
             {

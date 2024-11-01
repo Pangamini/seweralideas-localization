@@ -11,8 +11,8 @@ using UnityEngine;
 
 namespace SeweralIdeas.Localization
 {
-    [CreateAssetMenu(menuName = "SeweralIdeas/"+nameof(LocalizationManager), fileName = nameof(LocalizationManager))]
-    public class LocalizationManager : ScriptableObject
+    [CreateAssetMenu(menuName = "SeweralIdeas/"+nameof(LanguageManager), fileName = nameof(LanguageManager))]
+    public class LanguageManager : ScriptableObject
     {
         [SerializeField] private string                                                        m_streamingAssetsPath = "Languages/";
         [SerializeField] private string                                                        m_headerFilename      = "header.json";
