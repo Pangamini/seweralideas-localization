@@ -8,7 +8,7 @@ namespace SeweralIdeas.Localization
 {
     public static class LocalizationUtils
     {
-        public async static Task<string> LoadTextFile(string url)
+        public async static Task<string> LoadTextFileAsync(string url)
         {
             UnityWebRequest langListReq = UnityWebRequest.Get(url);
             langListReq.SendWebRequest();

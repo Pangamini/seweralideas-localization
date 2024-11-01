@@ -1,15 +1,15 @@
 using UnityEngine;
 namespace SeweralIdeas.Localization
 {
-    [ExecuteAlways]
     public class GlobalLanguageLoader : MonoBehaviour
     {
         [SerializeField] private LanguageLoader.Params             m_params;
 
-        private readonly LanguageLoader m_languageLoader = new();
+        private LanguageLoader m_languageLoader;
 
         protected void Awake()
         {
+            m_languageLoader = new();
             m_languageLoader.LoadedLanguage.Changed += OnLoadedLangChanged;
             m_languageLoader.LoadParams = m_params;
         }
@@ -17,13 +17,18 @@ namespace SeweralIdeas.Localization
         protected void OnDestroy()
         {
             m_languageLoader.LoadedLanguage.Changed -= OnLoadedLangChanged;
-            OnLoadedLangChanged(null);
+            OnLoadedLangChanged(null, m_languageLoader.LoadedLanguage.Value);
             m_languageLoader.LoadParams = default;
+            m_languageLoader = null;
         }
         
-        protected void OnValidate() => m_languageLoader.LoadParams = m_params;
-        
-        private void OnLoadedLangChanged(LanguageData language) => GlobalLanguage.Language.Value = language;
+        protected void OnValidate()
+        {
+            if(m_languageLoader != null)
+                m_languageLoader.LoadParams = m_params;
+        }
+
+        private void OnLoadedLangChanged(LanguageData language, LanguageData oldLang) => GlobalLanguage.Language.Value = language;
 
 
     }

@@ -12,7 +12,7 @@ namespace SeweralIdeas.Localization
 
         private void OnDisable() => GlobalLanguage.Language.Changed -= OnLanguageLoaded;
 
-        private void OnLanguageLoaded(LanguageData languageData) => UpdateText();
+        private void OnLanguageLoaded(LanguageData languageData, LanguageData oldData) => UpdateText();
 
         private void UpdateText() => m_updateEvent.Invoke(GetText(GlobalLanguage.Language.Value));
 

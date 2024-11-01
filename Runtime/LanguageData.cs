@@ -16,10 +16,11 @@ namespace SeweralIdeas.Localization
         private const string DefaultTextFilename = "default.json";
         private readonly Dictionary<string, string> m_texts = new();
         private readonly Dictionary<string, string> m_audioFiles = new();
-        
         public ReadonlyDictView<string, string> Texts => new(m_texts);
         public ReadonlyDictView<string, string> AudioFiles => new(m_audioFiles);
 
+        public event Action Modified;
+        
         public bool TryGetAudioUrl(string key, out string url)
         {
             url = null;
@@ -36,9 +37,17 @@ namespace SeweralIdeas.Localization
         public void SetText(string key, string newText)
         {
             m_texts[key] = newText;
+            Modified?.Invoke();
         }
 
-        public bool RemoveText(string key, out string removedValue) => m_texts.Remove(key, out removedValue);
+        public bool RemoveText(string key, out string removedValue)
+        {
+            if(!m_texts.Remove(key, out removedValue))
+                return false;
+            
+            Modified?.Invoke();
+            return true;
+        }
 
         public async static Task<LanguageData> LoadAsync(LanguageHeader header)
         {
@@ -47,7 +56,7 @@ namespace SeweralIdeas.Localization
             
             foreach (var jsonUrl in header.EnumerateDataUrls())
             {
-                await ReadDataUrl(jsonUrl, data.m_texts.Add, data.m_audioFiles.Add);
+                await ReadDataUrlAsync(jsonUrl, data.m_texts.Add, data.m_audioFiles.Add);
             }
             
             return data;
@@ -146,7 +155,7 @@ namespace SeweralIdeas.Localization
                             audioKeys.Add(key);
                         }
 
-                        await ReadDataUrl(jsonFile, KeyTextVisitor, KeyAudioVisitor);
+                        await ReadDataUrlAsync(jsonFile, KeyTextVisitor, KeyAudioVisitor);
 
                         SaveFile(jsonFile, textKeys, audioKeys, origToTempFile);
                     }
@@ -223,9 +232,9 @@ namespace SeweralIdeas.Localization
         }
 
         
-        private async static Task ReadDataUrl(string jsonFile, Action<string, string> keyTextVisitor, Action<string, string> keyAudioVisitor)
+        private async static Task ReadDataUrlAsync(string jsonFile, Action<string, string> keyTextVisitor, Action<string, string> keyAudioVisitor)
         {
-            string text = await LocalizationUtils.LoadTextFile(jsonFile);
+            string text = await LocalizationUtils.LoadTextFileAsync(jsonFile);
             if(string.IsNullOrWhiteSpace(text))
                 return;
             
@@ -293,6 +302,5 @@ namespace SeweralIdeas.Localization
             if(reader.TokenType != token)
                 throw new Exception($"Unexpected token \"{reader.TokenType}\", expected \"{token}\"");
         }
-
     }
 }
