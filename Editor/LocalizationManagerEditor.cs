@@ -1,4 +1,3 @@
-using SeweralIdeas.Localization.Editor;
 using UnityEditor;
 using UnityEngine;
 namespace SeweralIdeas.Localization.Editor
@@ -24,28 +23,40 @@ namespace SeweralIdeas.Localization.Editor
             var manager = (LocalizationManager)target;
             if(GUILayout.Button("Detect Languages"))
             {
-                manager.DetectLanguagesAsync();
+                manager.Reload();
             }
 
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
+            LanguageHeadersGui(manager);
+        }
+        
+        
+        private void LanguageHeadersGui(LocalizationManager manager)
+        {
+            // string loadedLangName = manager.LoadedLanguageName;
+
+            var headers = manager.Headers.Value;
             
-            string loadedLangName = manager.LoadedLanguageName;
-            foreach (var pair in manager.Headers)
+            foreach (var pair in headers)
             {
                 string langName = pair.Key;
                 LanguageHeader header = pair.Value;
-                bool isOn = langName == loadedLangName;
+                bool isOn = false;//langName == loadedLangName;
                 bool toggle = GUILayout.Toggle(isOn, new GUIContent(header.DisplayName, header.Texture), m_buttonStyle);
 
                 if(toggle && !isOn)
                 {
                     // clicked
-                    manager.SetLanguage(langName);
+                    EditorLanguageLoader.LoadParams = new LanguageLoader.Params
+                    {
+                        Manager = manager,
+                        LanguageName = langName
+                    };
                     RepaintInspector();
                 }
             }
         }
-        
+
         public static void RepaintInspector()
         {
             var ed = Resources.FindObjectsOfTypeAll<UnityEditor.Editor>();

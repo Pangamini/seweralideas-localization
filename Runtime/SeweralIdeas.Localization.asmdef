@@ -2,8 +2,7 @@
     "name": "SeweralIdeas.Localization",
     "rootNamespace": "SeweralIdeas.Localization",
     "references": [
-        "GUID:cf5a3647f2623f044943c7d12af0b6c4",
-        "GUID:9335601f754a4914c9a91b13cdffc91e"
+        "GUID:cf5a3647f2623f044943c7d12af0b6c4"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

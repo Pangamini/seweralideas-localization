@@ -48,14 +48,13 @@ namespace SeweralIdeas.Localization
             var data = new LanguageData();
             data.m_header = header;
             
-            foreach (var jsonUrl in header.EnumerateDataURLs())
+            foreach (var jsonUrl in header.EnumerateDataUrls())
             {
                 await ReadDataUrl(jsonUrl, data.m_texts.Add, data.m_audioFiles.Add);
             }
             
             return data;
         }
-
         
         public async Task Save()
         {
@@ -125,7 +124,7 @@ namespace SeweralIdeas.Localization
                 }
                 
                 // save all texts to its original locations
-                foreach (string jsonFile in Header.EnumerateDataURLs())
+                foreach (string jsonFile in Header.EnumerateDataUrls())
                 {
                     // skip the default file, we handle it later
                     if(jsonFile.Equals(defaultFile, StringComparison.OrdinalIgnoreCase))
@@ -240,7 +239,7 @@ namespace SeweralIdeas.Localization
         
         private async static Task ReadDataUrl(string jsonFile, Action<string, string> keyTextVisitor, Action<string, string> keyAudioVisitor)
         {
-            string text = await LocalizationManager.LoadTextFile(jsonFile);
+            string text = await LocalizationUtils.LoadTextFile(jsonFile);
             
             using var streamReader = new StringReader(text);
             using var reader = new JsonTextReader(streamReader);

@@ -51,7 +51,7 @@ namespace SeweralIdeas.Localization
 
         public async static Task<LanguageHeader> Load(string headerFileFullName)
         {
-            string json = await LocalizationManager.LoadTextFile(headerFileFullName);
+            string json = await LocalizationUtils.LoadTextFile(headerFileFullName);
             LanguageHeader header = JsonUtility.FromJson<LanguageHeader>(json);
 
             header.m_headerFile = headerFileFullName;
@@ -60,7 +60,7 @@ namespace SeweralIdeas.Localization
             return header;
         }
 
-        public IEnumerable<string> EnumerateDataURLs()
+        public IEnumerable<string> EnumerateDataUrls()
         {
             foreach (var file in m_dataFiles)
             {
