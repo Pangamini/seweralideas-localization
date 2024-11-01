@@ -16,18 +16,13 @@ namespace SeweralIdeas.Localization
         private Coroutine m_routine;
 
         
-        protected void OnEnable()
-        {
-            var manager = LocalizationManager.GetInstance();
-            manager.LanguageLoaded += OnLanguageLoaded;
-            if (manager.LoadedLanguage != null)
-                OnLanguageLoaded(manager.LoadedLanguage);
-        }
+        protected void OnEnable() => GlobalLanguage.Language.Changed += OnLanguageLoaded;
 
 
         protected void OnDisable()
         {
-            LocalizationManager.GetInstance().LanguageLoaded -= OnLanguageLoaded;
+            GlobalLanguage.Language.Changed -= OnLanguageLoaded;
+
             ClearOldRequest();
         }
         

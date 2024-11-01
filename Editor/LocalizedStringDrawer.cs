@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using SeweralIdeas.UnityUtils.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -29,22 +28,22 @@ namespace SeweralIdeas.Localization.Editor
             {
                 s_addKeyStyle = "OL Plus";
             }
+
+            var language = EditorLanguageLoader.LoadedLanguage.Value;
             
-            LocalizationManager localizationManager = LocalizationManager.GetInstance();
             var keyProp = property.FindPropertyRelative("m_key");
             Rect keyRect = new Rect(position.x, position.y, position.width - KeyPopupWidth - KeyAddWidth, EditorGUIUtility.singleLineHeight);
             Rect popupRect = new Rect(keyRect.xMax, keyRect.y, KeyPopupWidth, keyRect.height);
             Rect addRect = new Rect(popupRect.xMax, popupRect.y, KeyAddWidth, keyRect.height);
-            
             Rect valueRowRect = new Rect(position.x, keyRect.yMax, position.width, position.height - keyRect.height);
 
             EditorGUI.PropertyField(keyRect, keyProp, label);
 
-            GUI.enabled = localizationManager.LoadedLanguage != null;
-            if(GUI.Button(popupRect, GUIContent.none, EditorStyles.popup))
+            GUI.enabled = language != null;
+            if(GUI.Button(popupRect, GUIContent.none, EditorStyles.popup) && language != null)
             {
                 GUI.enabled = true;
-                var texts = localizationManager.LoadedLanguage.Texts;
+                var texts = language.Texts;
                 var controlId = GUIUtility.GetControlID(FocusType.Passive, popupRect);
                 
                 List<GUIContent> options = new();
@@ -64,11 +63,11 @@ namespace SeweralIdeas.Localization.Editor
                 AdvancedDropdownWindow.ShowWindow(controlId, scrRect, options, true, null, onKeySelected);
             }
 
-            var language = localizationManager.LoadedLanguage;
             GUI.enabled = language != null && !language.Texts.ContainsKey(keyProp.stringValue);
             if (GUI.Button(addRect, GUIContent.none, s_addKeyStyle))
             {
-                LocalizationEditor.SetLanguageText(localizationManager.LoadedLanguageName, keyProp.stringValue, string.Empty);
+                throw new NotImplementedException();
+                // LocalizationEditor.SetLanguageText(localizationManager.LoadedLanguageName, keyProp.stringValue, string.Empty);
             }
             GUI.enabled = true;
             
@@ -79,8 +78,7 @@ namespace SeweralIdeas.Localization.Editor
         
         private static void LocalizedValueGUI(Rect position, SerializedProperty property, Rect popupRect, SerializedProperty keyProp)
         {
-            LocalizationManager localizationManager = LocalizationManager.GetInstance();
-            LanguageData loadedLanguage = localizationManager.LoadedLanguage;
+            LanguageData loadedLanguage = EditorLanguageLoader.LoadedLanguage.Value;
 
             const float imageWidth = 32;
 
@@ -100,7 +98,8 @@ namespace SeweralIdeas.Localization.Editor
 
                 List<GUIContent> options = new();
                 List<string> langNames = new();
-                foreach (var pair in localizationManager.Headers)
+                
+                foreach (var pair in EditorLanguageLoader.LoadParams.Manager.Headers.Value)
                 {
                     langNames.Add(pair.Key);
                     options.Add(new GUIContent(pair.Value.DisplayName, pair.Value.Texture));
@@ -108,24 +107,31 @@ namespace SeweralIdeas.Localization.Editor
 
                 Action<int> onLangSelected = (index) =>
                 {
-                    localizationManager.SetLanguage(langNames[index]);
+                    EditorLanguageLoader.LoadParams = new LanguageLoader.Params
+                    {
+                        Manager = EditorLanguageLoader.LoadParams.Manager,
+                        LanguageName = langNames[index]
+                    };
                 };
+                
                 AdvancedDropdownWindow.ShowWindow(controlId, scrRect, options, true, null, onLangSelected);
             }
+            
             //EditorGUI.DrawTextureTransparent(iconRect, localizationManager.LoadedLanguage.Header.Texture, ScaleMode.ScaleToFit);
 
             using (ListPool<LocalizedString>.Get(out var localizedStrings))
             {
                 EditorReflectionUtility.GetVariable(property.propertyPath, property.serializedObject.targetObjects, localizedStrings);
-                string oldText = localizedStrings[0].Text;
+                loadedLanguage.Texts.TryGetValue(localizedStrings[0].Key, out var oldText);
                 
-                GUI.enabled = localizationManager.LoadedLanguage.Texts.ContainsKey(keyProp.stringValue);
-                string newText = EditorGUI.DelayedTextField(valueRect, localizedStrings[0].Text);
+                GUI.enabled = EditorLanguageLoader.LoadedLanguage.Value.Texts.ContainsKey(keyProp.stringValue);
+                string newText = EditorGUI.DelayedTextField(valueRect, oldText);
                 
                 // apply changes to the language, if change
                 if(oldText != newText && GUI.enabled)
                 {
-                    LocalizationEditor.SetLanguageText(localizationManager.LoadedLanguageName, keyProp.stringValue, newText);
+                    throw new NotImplementedException();
+                    // LocalizationEditor.SetLanguageText(editorLangSettings.Manager.LoadedLanguageName, keyProp.stringValue, newText);
                 }
                 GUI.enabled = true;
             }
