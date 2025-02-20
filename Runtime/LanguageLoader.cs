@@ -47,6 +47,9 @@ namespace SeweralIdeas.Localization
         {
             m_currentTask = null;
 
+            if(target == null)
+                return;
+            
             if(!target.TryGetValue(LoadParams.LanguageName, out LanguageHeader languageHeader))
             {
                 m_loadedLanguage.Value = null;
