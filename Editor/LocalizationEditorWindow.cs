@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using SeweralIdeas.Collections;
 using SeweralIdeas.Editor;
@@ -59,6 +57,9 @@ namespace SeweralIdeas.Localization.Editor
         {
             ClearAllRequests();
 
+            if(languageHeaders == null)
+                return;
+            
             foreach (KeyValuePair<string, LanguageHeader> keyValuePair in languageHeaders)
             {
                 var request = EditorLanguageManager.CreateRequest(keyValuePair.Key);
