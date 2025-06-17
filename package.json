@@ -1,14 +1,12 @@
 {
   "name": "com.seweralideas.localization",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "displayName": "Localization",
   "description": "Localization for Unity",
-  "author": 
-  {
-    "name": "Boleslav Horak",
+  "author": {
+    "name": "Boleslav Horák",
     "email": "seweralideas@gmail.com"
   },
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.0.2"
   }
 }

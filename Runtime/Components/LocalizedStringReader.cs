@@ -19,7 +19,7 @@ namespace SeweralIdeas.Localization
         private string GetText(LanguageData languageData)
         {
             if(languageData == null)
-                return "NO LANG";
+                return "NO LANGUAGE";
             var text = languageData.Texts.GetValueOrDefault(m_localizedString.Key, "NOT FOUND");
             return text;
         }

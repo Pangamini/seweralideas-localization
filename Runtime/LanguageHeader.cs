@@ -3,68 +3,83 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace SeweralIdeas.Localization
 {
     [Serializable]
     public class LanguageHeader
     {
-        [SerializeField] private string m_name;
-        [SerializeField] private string m_author;
-        [SerializeField] private string m_icon;
-        [SerializeField] private List<string> m_dataFiles = new();
+        [SerializeField]      
+        private string       name;
+        
+        [SerializeField]  
+        private string       author;
+        
+        [SerializeField]     
+        private string       icon;
+        
+        [SerializeField] 
+        private List<string> dataFiles = new();
 
-        private string m_directory;
-        private string m_headerFile;
-        private Sprite m_sprite;
-        private Texture2D m_texture;
+        private string _directory;
+        private string _headerFile;
+        private Sprite _sprite;
+        private Texture2D _texture;
 
         public Texture2D Texture
         {
             get
             {
-                if(m_texture == null)
-                {
-                    string dirPath = Path.GetDirectoryName(m_headerFile);
-                    string iconPath = Path.Combine(dirPath, m_icon);
+                if (_texture != null)
+                    return _texture;
 
-                    if(File.Exists(iconPath))
-                    {
-                        byte[] data = File.ReadAllBytes(iconPath);
-                        m_texture = new Texture2D(2, 2);
-                        m_texture.LoadImage(data, false);
-                        //header.m_texture.Compress(true);
-                        m_sprite = Sprite.Create(m_texture, new Rect(0, 0, m_texture.width, m_texture.height), new Vector2(0.5f, 0.5f), 1);
-                    }
-                }
-                return m_texture;
+                if (string.IsNullOrEmpty(icon))
+                    return null;
+                
+                string dirPath = Path.GetDirectoryName(_headerFile);
+                string iconPath = Path.Combine(dirPath, icon);
+
+                if (!File.Exists(iconPath))
+                    return null;
+                
+                byte[] data = File.ReadAllBytes(iconPath);
+                _texture = new Texture2D(2, 2);
+                _texture.LoadImage(data, false);
+                //header.m_texture.Compress(true);
+                _sprite = Sprite.Create(_texture, new Rect(0, 0, _texture.width, _texture.height), new Vector2(0.5f, 0.5f), 1, 0, SpriteMeshType.FullRect);
+
+                return _texture;
             }
         }
 
-        public Sprite Sprite => m_sprite;
-        public string Directory => m_directory;
-        public string HeaderFile => m_headerFile;
+        public Sprite Sprite => _sprite;
+        public string Directory => _directory;
+        public string HeaderFile => _headerFile;
 
-        public string DisplayName => m_name;
-        public string Author => m_author;
-        public List<string> DataFiles => m_dataFiles;
+        public string DisplayName => name;
+        public string Author => author;
+        public List<string> DataFiles => dataFiles;
 
-        public async static Task<LanguageHeader> Load(string headerFileFullName)
+        public static async Task<LanguageHeader> Load(string headerFileFullName)
         {
             string json = await LocalizationUtils.LoadTextFileAsync(headerFileFullName);
             LanguageHeader header = JsonUtility.FromJson<LanguageHeader>(json);
 
-            header.m_headerFile = headerFileFullName;
-            header.m_directory = headerFileFullName.Substring(0, headerFileFullName.Length - Path.GetFileName(headerFileFullName).Length);
+            if(header == null)
+                throw new InvalidDataException($"Failed to load language header from {headerFileFullName}");
+            
+            header._headerFile = headerFileFullName;
+            header._directory = headerFileFullName.Substring(0, headerFileFullName.Length - Path.GetFileName(headerFileFullName).Length);
 
             return header;
         }
 
         public IEnumerable<string> EnumerateDataUrls()
         {
-            foreach (var file in m_dataFiles)
+            foreach (var file in dataFiles)
             {
-                yield return Path.Combine(m_directory, file);
+                yield return Path.Combine(_directory, file);
             }
         }
     }

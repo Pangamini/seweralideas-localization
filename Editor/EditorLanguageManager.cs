@@ -2,18 +2,17 @@ using System;
 using System.Collections.Generic;
 using SeweralIdeas.Utils;
 using UnityEditor;
-using UnityEngine;
+
 namespace SeweralIdeas.Localization.Editor
 {
     public static class EditorLanguageManager
     {
-        public const   string                PlayerPrefsKey = "EditorLanguageSettings";
+        public const string PlayerPrefsKey = "EditorLanguageSettings";
         
         private static readonly Dictionary<string, Record>  Records = new();
-        private static          Request                     s_activeLanguageRequest;
+        private static          Request                     _activeLanguageRequest;
 
         public static readonly  Observable<LanguageManager> ActiveManager            = new();
-        
         private static readonly Observable<LanguageData>    ActiveLanguageObservable = new();
         public static Observable<LanguageData>.Readonly ActiveLanguage => ActiveLanguageObservable.ReadOnly;
         
@@ -21,46 +20,58 @@ namespace SeweralIdeas.Localization.Editor
 
         public static string ActiveLanguageName
         {
-            get => s_activeLanguageRequest?.LangName;
+            get => _activeLanguageRequest?.LangName;
             set
             {
-                if(s_activeLanguageRequest != null && s_activeLanguageRequest.LangName == value)
+                if(_activeLanguageRequest != null && _activeLanguageRequest.LangName == value)
                     return;
 
-                if(s_activeLanguageRequest != null)
-                    s_activeLanguageRequest.Language.Changed -= OnActiveLanguageRequestChanged;
+                if(_activeLanguageRequest != null)
+                    _activeLanguageRequest.Language.Changed -= OnActiveLanguageRequestChanged;
                 
-                s_activeLanguageRequest?.Dispose();
-                s_activeLanguageRequest = CreateRequest(value);
+                _activeLanguageRequest?.Dispose();
+                _activeLanguageRequest = CreateRequest(value);
 
-                s_activeLanguageRequest.Language.Changed += OnActiveLanguageRequestChanged;
+                _activeLanguageRequest.Language.Changed += OnActiveLanguageRequestChanged;
+                SavePrefs();
             }
         }
-        
-        private static void OnActiveLanguageRequestChanged(LanguageData lang, LanguageData oldLang) => ActiveLanguageObservable.Value = lang;
 
+        private static void OnActiveLanguageRequestChanged(LanguageData lang, LanguageData oldLang) => ActiveLanguageObservable.Value = lang;
+        
         static EditorLanguageManager()
         {
             var json = EditorPrefs.GetString(PlayerPrefsKey);
-            
-            if(string.IsNullOrWhiteSpace(json))
-                return;
-        
-            // deserialize
-            object obj = new LanguageLoader.Params();
-            EditorJsonUtility.FromJsonOverwrite(json, obj);
-            var loadedParams = (LanguageLoader.Params)obj;
-            
-            ActiveManager.Value = loadedParams.Manager;
-            ActiveLanguageName = loadedParams.LanguageName;
-            
+
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                object obj = new LanguageLoader.Params();
+                EditorJsonUtility.FromJsonOverwrite(json, obj);
+                var loadedParams = (LanguageLoader.Params)obj;
+
+                ActiveManager.Value = loadedParams.Manager;
+                ActiveLanguageName = loadedParams.LanguageName;
+            }
+
             ActiveManager.Changed += (newManager, oldManager) =>
             {
                 foreach (var pair in Records)
                     pair.Value.SetLanguageManager(newManager);
+                SavePrefs();
             };
         }
         
+        private static void SavePrefs()
+        {
+            var parameters = new LanguageLoader.Params()
+            {
+                Manager = ActiveManager.Value,
+                LanguageName = ActiveLanguageName
+            };
+            string json = EditorJsonUtility.ToJson(parameters);
+            EditorPrefs.SetString(PlayerPrefsKey, json);
+        }
+
         private class Record
         {
             public int Count;
