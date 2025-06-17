@@ -35,22 +35,25 @@ namespace SeweralIdeas.Localization.Editor
         {
             // string loadedLangName = manager.LoadedLanguageName;
 
-            var headers = manager.Headers.Value;
+            var maybeHeaders = manager.Headers.Value;
+
+            if (maybeHeaders is not { } headers)
+                return;
             
             foreach (var pair in headers)
             {
                 string langName = pair.Key;
                 LanguageHeader header = pair.Value;
-                bool isOn = false;//langName == loadedLangName;
+                bool isOn = langName == EditorLanguageManager.ActiveLanguageName;
                 bool toggle = GUILayout.Toggle(isOn, new GUIContent(header.DisplayName, header.Texture), m_buttonStyle);
 
-                if(toggle && !isOn)
-                {
-                    // clicked
-                    EditorLanguageManager.ActiveManager.Value = manager;
-                    EditorLanguageManager.ActiveLanguageName = langName;
-                    RepaintInspector();
-                }
+                if (!toggle || isOn)
+                    continue;
+                
+                // clicked
+                EditorLanguageManager.ActiveManager.Value = manager;
+                EditorLanguageManager.ActiveLanguageName = langName;
+                RepaintInspector();
             }
         }
 
