@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 using SeweralIdeas.Collections;
 using SeweralIdeas.Utils;
 using UnityEngine.Pool;
-#if UNITY_EDITOR
 using UnityEngine;
-#endif
 
 namespace SeweralIdeas.Localization
 {
