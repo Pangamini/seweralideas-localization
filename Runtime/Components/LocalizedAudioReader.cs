@@ -40,14 +40,14 @@ namespace SeweralIdeas.Localization
             }
         }
 
-        private void OnLanguageLoaded(LanguageData languageData, LanguageData oldData) => UpdateAudio();
+        private void OnLanguageLoaded(LanguageInfo languageData, LanguageInfo oldData) => UpdateAudio();
         
         
         void UpdateAudio()
         {
             ClearOldRequest();
 
-            LanguageData languageData = GlobalLanguage.Language.Value;
+            LanguageData languageData = GlobalLanguage.Language.Value.LanguageData;
                 
             if(languageData == null || !languageData.TryGetAudioUrl(m_key, out string audioFile))
             {

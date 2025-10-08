@@ -31,17 +31,9 @@ namespace SeweralIdeas.Localization
 
         private void OnDisable() => GlobalLanguage.Language.Changed -= OnLanguageLoaded;
 
-        private void OnLanguageLoaded(LanguageData languageData, LanguageData oldData) => UpdateText();
+        private void OnLanguageLoaded(LanguageInfo languageData, LanguageInfo oldData) => UpdateText();
 
-        private void UpdateText() => _updateEvent.Invoke(GetText(GlobalLanguage.Language.Value));
-
-        private string GetText(LanguageData languageData)
-        {
-            if(languageData == null)
-                return "NO LANGUAGE";
-            var text = languageData.Texts.GetValueOrDefault(_localizedString.Key ?? string.Empty, "NOT FOUND");
-            return text;
-        }
+        private void UpdateText() => _updateEvent.Invoke(GlobalLanguage.Language.Value.GetText(_localizedString));
 
         #if UNITY_EDITOR
         protected void OnValidate()

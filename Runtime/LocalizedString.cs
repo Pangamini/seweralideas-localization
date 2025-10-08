@@ -13,12 +13,8 @@ namespace SeweralIdeas.Localization
         {
             get
             {
-                LanguageData language = GlobalLanguage.Language.Value;
-                if(language == null)
-                    return "NO LANGUAGE";
-                
-                return language.Texts.TryGetValue(m_key, out var value) ? value : m_key;
-
+                LanguageInfo langInfo = GlobalLanguage.Language.Value;
+                return langInfo.GetText(this);
             }
         }
         
