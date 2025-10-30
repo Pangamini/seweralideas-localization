@@ -51,7 +51,7 @@ namespace SeweralIdeas.Localization
 
         private void OnLanguageLoaded(LanguageInfo languageData, LanguageInfo oldData) => UpdateText();
 
-        private void UpdateText() => _updateEvent.Invoke(GlobalLanguage.Language.Value.GetText(_localizedString));
+        private void UpdateText() => _updateEvent.Invoke(_hasValue ? GlobalLanguage.Language.Value.GetText(_localizedString) : null);
 
         #if UNITY_EDITOR
         protected void OnValidate()
