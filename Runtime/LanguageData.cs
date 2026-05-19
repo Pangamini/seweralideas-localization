@@ -12,12 +12,12 @@ namespace SeweralIdeas.Localization
 {
     public class LanguageData
     {
-        private LanguageHeader m_header;
+        private LanguageHeader _header;
         private const string DefaultTextFilename = "default.json";
-        private readonly Dictionary<string, string> m_texts = new();
-        private readonly Dictionary<string, string> m_audioFiles = new();
-        public ReadonlyDictView<string, string> Texts => new(m_texts);
-        public ReadonlyDictView<string, string> AudioFiles => new(m_audioFiles);
+        private readonly Dictionary<string, string> _texts = new();
+        private readonly Dictionary<string, string> _audioFiles = new();
+        public ReadonlyDictView<string, string> Texts => _texts;
+        public ReadonlyDictView<string, string> AudioFiles => _audioFiles;
 
         public event Action Modified;
         
@@ -25,38 +25,38 @@ namespace SeweralIdeas.Localization
         {
             url = null;
             
-            if(!m_audioFiles.TryGetValue(key, out var audioFile))
+            if(!_audioFiles.TryGetValue(key, out var audioFile))
                 return false;
 
-            url = Path.Combine(m_header.Directory, audioFile);
+            url = Path.Combine(_header.Directory, audioFile);
             return true;
         }
         
-        public LanguageHeader Header => m_header;
+        public LanguageHeader Header => _header;
         
         public void SetText(string key, string newText)
         {
-            m_texts[key] = newText;
+            _texts[key] = newText;
             Modified?.Invoke();
         }
 
         public bool RemoveText(string key, out string removedValue)
         {
-            if(!m_texts.Remove(key, out removedValue))
+            if(!_texts.Remove(key, out removedValue))
                 return false;
             
             Modified?.Invoke();
             return true;
         }
 
-        public async static Task<LanguageData> LoadAsync(LanguageHeader header)
+        public static async Task<LanguageData> LoadAsync(LanguageHeader header)
         {
             var data = new LanguageData();
-            data.m_header = header;
+            data._header = header;
             
             foreach (var jsonUrl in header.EnumerateDataUrls())
             {
-                await ReadDataUrlAsync(jsonUrl, data.m_texts.Add, data.m_audioFiles.Add);
+                await ReadDataUrlAsync(jsonUrl, data._texts.Add, data._audioFiles.Add);
             }
             
             return data;
@@ -104,8 +104,8 @@ namespace SeweralIdeas.Localization
                     writer.Formatting = Formatting.Indented;
                     writer.WriteToken(JsonToken.StartObject);
                     
-                    WriteHunk(HunkNameText, textKeys, m_texts, writer);
-                    WriteHunk(HunkNameAudio, audioKeys, m_audioFiles, writer);
+                    WriteHunk(HunkNameText, textKeys, _texts, writer);
+                    WriteHunk(HunkNameAudio, audioKeys, _audioFiles, writer);
                     
                     writer.WriteToken(JsonToken.EndObject);
                 }
@@ -115,16 +115,16 @@ namespace SeweralIdeas.Localization
             using (HashSetPool<string>.Get(out var unsavedTexts))
             using (HashSetPool<string>.Get(out var unsavedAudio))
             {
-                string defaultFile = Path.Combine(m_header.Directory, DefaultTextFilename);
+                string defaultFile = Path.Combine(_header.Directory, DefaultTextFilename);
 
 
                 // mark all keys as unsaved
-                foreach (var pair in m_texts)
+                foreach (var pair in _texts)
                 {
                     unsavedTexts.Add(pair.Key);
                 }
                 
-                foreach (var pair in m_audioFiles)
+                foreach (var pair in _audioFiles)
                 {
                     unsavedAudio.Add(pair.Key);
                 }
@@ -201,7 +201,7 @@ namespace SeweralIdeas.Localization
                         // We finished writing to temp files, but copying back somehow failed.
                         // Log the temp => original file map for recovery
                         var sb = new StringBuilder();
-                        sb.AppendLine($"Unknown error during saving LanguageData at {m_header.Directory}. Data saved to temp files. Dumping temp file map:");
+                        sb.AppendLine($"Unknown error during saving LanguageData at {_header.Directory}. Data saved to temp files. Dumping temp file map:");
                         foreach (var pair in origToTempFile)
                         {
                             sb.Append(pair.Key);
@@ -232,7 +232,7 @@ namespace SeweralIdeas.Localization
         }
 
         
-        private async static Task ReadDataUrlAsync(string jsonFile, Action<string, string> keyTextVisitor, Action<string, string> keyAudioVisitor)
+        private static async Task ReadDataUrlAsync(string jsonFile, Action<string, string> keyTextVisitor, Action<string, string> keyAudioVisitor)
         {
             string text = await LocalizationUtils.LoadTextFileAsync(jsonFile);
             if(string.IsNullOrWhiteSpace(text))

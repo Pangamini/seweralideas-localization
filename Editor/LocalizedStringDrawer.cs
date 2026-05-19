@@ -117,7 +117,7 @@ namespace SeweralIdeas.Localization.Editor
             using (ListPool<LocalizedString>.Get(out var localizedStrings))
             {
                 EditorReflectionUtility.GetVariable(property.propertyPath, property.serializedObject.targetObjects, localizedStrings);
-                string key = localizedStrings[0].Key;
+                string key = localizedStrings[0].Key ?? string.Empty;
                 loadedLanguage.Texts.TryGetValue(key, out var oldText);
                 
                 GUI.enabled = EditorLanguageManager.ActiveLanguage.Value.Texts.ContainsKey(keyProp.stringValue);

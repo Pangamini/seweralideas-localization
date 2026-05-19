@@ -40,7 +40,7 @@ namespace SeweralIdeas.Localization
             }
         }
 
-        private void OnLanguageLoaded(LanguageData languageData, LanguageData oldData) => UpdateAudio();
+        private void OnLanguageLoaded(LanguageInfo info, LanguageInfo old) => UpdateAudio();
         
         
         void UpdateAudio()
