@@ -45,18 +45,18 @@ namespace SeweralIdeas.Localization
         
         void UpdateAudio()
         {
-            ClearOldRequest();
-
-            LanguageData languageData = GlobalLanguage.Language.Value;
-                
-            if(languageData == null || !languageData.TryGetAudioUrl(m_key, out string audioFile))
-            {
-                m_updateEvent.Invoke(null);
-                return;
-            }
-
-            m_request = AudioManager.Instance.CreateRequest(audioFile);
-            m_routine = StartCoroutine(LoadRoutine());
+            // ClearOldRequest();
+            // 
+            // LanguageData languageData = GlobalLanguage.Language.Value;
+            //     
+            // if(languageData == null || !languageData.TryGetAudioUrl(m_key, out string audioFile))
+            // {
+            //     m_updateEvent.Invoke(null);
+            //     return;
+            // }
+            // 
+            // m_request = AudioManager.Instance.CreateRequest(audioFile);
+            // m_routine = StartCoroutine(LoadRoutine());
         }
         
         private IEnumerator LoadRoutine()
