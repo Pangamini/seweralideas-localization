@@ -1,34 +1,62 @@
 using System.Collections.Generic;
+using SeweralIdeas.UnityUtils.Drawers;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
+
 namespace SeweralIdeas.Localization
 {
     public class LocalizedStringReader : MonoBehaviour
     {
-        [SerializeField] private LocalizedString m_localizedString;
-        [SerializeField] private UnityEvent<string> m_updateEvent = new();
+        [SerializeField]
+        private bool _hasValue = true;
         
+        [SerializeField] 
+        [Condition(nameof(_hasValue))]
+        [FormerlySerializedAs("m_localizedString")] 
+        private LocalizedString _localizedString;
+        
+        [SerializeField] 
+        [FormerlySerializedAs("m_updateEvent")] 
+        private UnityEvent<string> _updateEvent = new();
+
+        public LocalizedString? LocalizedString
+        {
+            get => _hasValue ? _localizedString : null; 
+            set
+            {
+                if (!_hasValue && !value.HasValue)
+                    return;
+                
+                if ( value is {} newValue)
+                {
+                    if(_hasValue && _localizedString == newValue) 
+                        return;
+                    
+                    _localizedString = newValue;
+                    _hasValue = true;
+                }
+                else
+                {
+                    _hasValue = false;
+                }
+
+                UpdateText();
+            }
+        }
+
         private void OnEnable() => GlobalLanguage.Language.Changed += OnLanguageLoaded;
 
         private void OnDisable() => GlobalLanguage.Language.Changed -= OnLanguageLoaded;
 
-        private void OnLanguageLoaded(LanguageData languageData, LanguageData oldData) => UpdateText();
+        private void OnLanguageLoaded(LanguageInfo languageData, LanguageInfo oldData) => UpdateText();
 
-        private void UpdateText() => m_updateEvent.Invoke(GetText(GlobalLanguage.Language.Value));
-
-        private string GetText(LanguageData languageData)
-        {
-            if(languageData == null)
-                return "NO LANG";
-            var text = languageData.Texts.GetValueOrDefault(m_localizedString.Key, "NOT FOUND");
-            return text;
-        }
+        private void UpdateText() => _updateEvent.Invoke(_hasValue ? GlobalLanguage.Language.Value.GetText(_localizedString) : null);
 
         #if UNITY_EDITOR
         protected void OnValidate()
         {
-            if(Application.isPlaying && gameObject.scene.IsValid())
-                UpdateText();
+            UpdateText();
         }
         #endif
     }

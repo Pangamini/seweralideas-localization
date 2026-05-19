@@ -53,7 +53,7 @@ namespace SeweralIdeas.Localization.Editor
                 languageManager.Headers.Changed += OnLanguageSetChanged;
         }
 
-        private void OnLanguageSetChanged(ReadonlyDictView<string, LanguageHeader> languageHeaders, ReadonlyDictView<string, LanguageHeader> oldHeaders)
+        private void OnLanguageSetChanged(ReadonlyDictView<string, LanguageHeader>? languageHeaders, ReadonlyDictView<string, LanguageHeader>? oldHeaders)
         {
             ClearAllRequests();
 

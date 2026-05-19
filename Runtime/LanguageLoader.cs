@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using SeweralIdeas.Collections;
 using SeweralIdeas.Utils;
@@ -9,59 +8,77 @@ namespace SeweralIdeas.Localization
 {
     public class LanguageLoader
     {
-        private          Params                   m_params;
-        private          Task<LanguageData>       m_currentTask;
-        private readonly Observable<LanguageData> m_loadedLanguage = new();
+        private          Params                   _params;
+        private          Task<LanguageData>       _currentTask;
+        private readonly Observable<LanguageData> _loadedLanguage = new();
         
-        public Observable<LanguageData>.Readonly LoadedLanguage => m_loadedLanguage.ReadOnly;
+        public Observable<LanguageData>.Readonly LoadedLanguage => _loadedLanguage.ReadOnly;
         
         [Serializable]
-        public struct Params
+        public struct Params : IEquatable<Params>
         {
             [SerializeField] public LanguageManager Manager;
             [SerializeField] public string          LanguageName;
+
+            public bool Equals(Params other) => Equals(Manager, other.Manager) && LanguageName == other.LanguageName;
+            public override bool Equals(object obj) => obj is Params other && Equals(other);
+            public override int GetHashCode() => HashCode.Combine(Manager, LanguageName);
+            public static bool operator ==(Params left, Params right) => left.Equals(right);
+            public static bool operator !=(Params left, Params right) => !left.Equals(right);
         }
         
         public Params LoadParams
         {
-            get => m_params;
+            get => _params;
             set
             {
-                if(EqualityComparer<Params>.Default.Equals(m_params, value))
+                if(_params == value)
                     return;
 
-                if(m_params.Manager != null)
-                    m_params.Manager.Headers.Changed -= OnHeadersChanged;
+                if(_params.Manager != null)
+                    _params.Manager.Headers.Changed -= OnHeadersChanged;
 
-                m_params = value;
-                m_params = value;
+                _params = value;
 
-                if(m_params.Manager != null)
-                    m_params.Manager.Headers.Changed += OnHeadersChanged;
+                if(_params.Manager != null)
+                    _params.Manager.Headers.Changed += OnHeadersChanged;
                 else
-                    OnHeadersChanged(default, default);
+                    OnHeadersChanged(null, null);
+            }
+        }
+
+        private void OnHeadersChanged(ReadonlyDictView<string, LanguageHeader>? maybeTarget, ReadonlyDictView<string, LanguageHeader>? _)
+        {
+            var task = LoadLanguageDataAsync(maybeTarget);
+            _currentTask = task;
+            var __ = CompleteLoadingAsync(task);
+        }
+
+        private async Task CompleteLoadingAsync(Task<LanguageData> task)
+        {
+            try
+            {
+                var result = await task;
+                if (task == _currentTask)
+                    _loadedLanguage.Value = result;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
             }
         }
         
-        private async void OnHeadersChanged(ReadonlyDictView<string, LanguageHeader> target, ReadonlyDictView<string, LanguageHeader> _)
+        private async Task<LanguageData> LoadLanguageDataAsync(ReadonlyDictView<string, LanguageHeader>? maybeTarget)
         {
-            m_currentTask = null;
-
-            if(target == null)
-                return;
+            if(maybeTarget is not {} target)
+                return null;
             
-            if(!target.TryGetValue(LoadParams.LanguageName, out LanguageHeader languageHeader))
-            {
-                m_loadedLanguage.Value = null;
-                return;
-            }
+            if(string.IsNullOrEmpty(LoadParams.LanguageName) || !target.TryGetValue(LoadParams.LanguageName, out LanguageHeader languageHeader))
+                return null;
             
             var task = LanguageData.LoadAsync(languageHeader);
-            m_currentTask = task;
             LanguageData result = await task;
-
-            if(task == m_currentTask)
-                m_loadedLanguage.Value = result;
+            return result;
         }
     }
 }

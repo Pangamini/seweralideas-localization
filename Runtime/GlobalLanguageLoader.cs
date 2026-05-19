@@ -3,8 +3,9 @@ namespace SeweralIdeas.Localization
 {
     public class GlobalLanguageLoader : MonoBehaviour
     {
-        [SerializeField] private LanguageManager m_manager;
-        [SerializeField] private string          m_languageName;
+        [SerializeField] private LanguageSettings m_settings = LanguageSettings.Default;
+        [SerializeField] private LanguageManager  m_manager;
+        [SerializeField] private string           m_languageName;
 
         private LanguageLoader m_languageLoader;
         
@@ -58,7 +59,11 @@ namespace SeweralIdeas.Localization
                 };
         }
 
-        private void OnLoadedLangChanged(LanguageData language, LanguageData oldLang) => GlobalLanguage.Language.Value = language;
+        private void OnLoadedLangChanged(LanguageData language, LanguageData oldLang) => GlobalLanguage.Language.Value = new ()
+        {
+            LanguageData = language,
+            Settings = m_settings
+        };
 
 
     }
